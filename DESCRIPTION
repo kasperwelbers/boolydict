@@ -1,0 +1,17 @@
+Package: textquery
+Type: Package
+Title: Perform Lucene-like Boolean queries 
+Version: 0.1.0
+Author: Kasper Welbers
+Maintainer: Kasper Welbers <kasperwelbers@gmail.com>
+Description: Perform Lucene-like queries, supporting the main Boolean operators
+    AND, OR and NOT, proximity search, multiword strings, and more. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    data.table,
+    Rcpp (>= 1.0.7),
+    pbapply
+LinkingTo: Rcpp, RcppProgress
+RoxygenNote: 7.1.2
