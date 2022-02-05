@@ -16,7 +16,6 @@
 #' @param context_level Select whether the queries should occur within while "documents" or specific "sentences".
 #' @param keep_longest If TRUE, then overlapping in case of overlapping queries strings in unique_hits mode, the query with the most separate terms is kept. For example, in the text "mr. Bob Smith", the query [smith OR "bob smith"] would match "Bob" and "Smith". If keep_longest is FALSE, the match that is used is determined by the order in the query itself. The same query would then match only "Smith".
 #' @param as_ascii if TRUE, perform search in ascii.
-#' @param verbose If TRUE, progress messages will be printed
 #'
 #' @details
 #' Brief summary of the query language
@@ -131,29 +130,15 @@
 #' search_query(text, 'A AND B~g')
 #'
 #' }
-search_query <- function(df, queries, text='text', context=NULL, index=NULL, mode = c('hits','terms'), keep_longest=TRUE, as_ascii=F, verbose=F){
-  query_i = NULL
+search_query <- function(df, queries, text='text', context=NULL, index=NULL, mode = c('hits','terms'), keep_longest=TRUE, as_ascii=F){
   mode = match.arg(mode)
   if (!is.data.frame(df)) df = data.table::data.table(text=df)
   if (!text %in% colnames(df)) stop(sprintf('text (%s) is not available', text))
 
-  queries = parse_queries(queries, feature = text) ## use text as default feature to query on (but queries can also refer to specific other features)
-  dict_results = get_dict_results(df, queries, text, index=index, context=context, as_ascii=as_ascii, verbose=verbose)
-
-  if (verbose)
-    pbapply::pboptions(type = "txt", style=3)
-  else
-    pbapply::pboptions(type='none')
-
-  hits = pbapply::pblapply(1:length(queries$queries), function(i) {
-    h = lucene_like(dict_results, queries$queries[[i]], mode=mode,  keep_longest=keep_longest)
-    if (!is.null(h)) h[, query_index := i]
-    h[,c('term','query_index','hit_id','data_indices')]
-  })
-
-  hits = data.table::rbindlist(hits, fill = T)
+  hits = perform_query_search(df, queries, mode, text, index, context, as_ascii)
   if (nrow(hits) == 0) return(data.table::data.table(term=character(), query_index=numeric(), hit_id=numeric(), data_index=numeric()))
 
+  ## exact multiword strings are collapsed for efficiency. Here we flatten them again to get all the data_indices
   n_data_indices = sapply(hits$data_indices, length)
   if (any(n_data_indices != 1)) {
     di = unlist(hits$data_indices)
@@ -167,16 +152,55 @@ search_query <- function(df, queries, text='text', context=NULL, index=NULL, mod
 
   if (mode == 'hits') hits = unique(hits[, c('data_index','query_index','hit_id')])
   if (mode == 'terms') hits = unique(hits[,c('data_index','query_index','term')])
+  data.table::setorderv(hits, c('data_index','query_index'))
   hits
 }
+
+
+perform_query_search <- function(df, queries, mode, text, index, context, as_ascii) {
+  hit_id = NULL
+  ## first parses the queries, which gives the prepared queries split into dictionary_terms and advanced_queries,
+  ## and gives the lookup_terms used in these queries.
+  queries = parse_queries(queries, feature = text) ## use text as default feature to query on (but queries can also refer to specific other features)
+
+  ## then lookup the terms
+  dict_results = get_dict_results(df, queries$lookup_terms, text, index=index, context=context, as_ascii=as_ascii)
+
+  ## process the (less expensive) dictionary_terms
+  if (!is.null(queries$dictionary_terms)) {
+    text_results = dict_results[["text"]] ## dictionary terms always only use the specified text column (unlike adv, which can have columns specified in the query)
+    dictionary_hits = merge(text_results[,c('term','data_indices')], queries$dictionary_terms, by='term')
+    dictionary_hits[, hit_id := 1:length(term), by='query_index']
+    data.table::setcolorder(dictionary_hits, c('term','query_index','hit_id','data_indices'))
+  } else dictionary_hits = NULL
+
+  ## process the advanced query terms
+  if (!is.null(queries$advanced_queries)) {
+    advanced_hits = lapply(1:nrow(queries$advanced_queries), function(i) {
+      h = lucene_like(dict_results, queries$advanced_queries$query[[i]], mode=mode,  keep_longest=keep_longest)
+      if (!is.null(h)) h[, query_index := queries$advanced_queries$query_index[i]]
+      h[,c('term','query_index','hit_id','data_indices')]
+    })
+    advanced_hits = data.table::rbindlist(advanced_hits, fill = T)
+  } else advanced_hits = NULL
+
+  rbindlist(list(dictionary_hits, advanced_hits))
+}
+
+
+
+
+
+
 
 function() {
   df = data.frame(text = c("dit", "is", "een voorbeeld om", "me te", "testen", "and", "this"),
                   group = c(1,1,1,1,1,2,2),
                   token_id = c(1,4,5,6,7,1,4))
-  queries = c('<een om>~3', '<om me>')
+  queries = c('een om', '<om me>', 'voorbeeld', '<te testen>')
   search_query(df, queries, context='group', index='token_id')
 
+  parse_queries(queries)
 
   #options(warn = 2)
   #options(warn = 0)
@@ -196,5 +220,5 @@ function() {
 
   d = corpustools::sotu_texts
 
-  search_query(d, 'war AND peace')
+  search_query(d, paste0('"', test$string, '"'))
 }

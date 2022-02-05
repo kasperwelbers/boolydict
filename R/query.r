@@ -1,12 +1,45 @@
 parse_queries <- function(q, feature='', optimize_OR=T, optimize_seq=T) {
-  queries = lapply(q, parse_query, feature=feature, optimize_OR=optimize_OR, optimize_seq=optimize_seq)
-  queries = list(queries = lapply(queries, function(x) x$query),
-                 query_terms = data.table::rbindlist(lapply(queries, function(x) x$query_terms), fill = T))
-  data.table::setkeyv(queries$query_terms, 'feature')
-  queries
+  q = stringi::stri_trim(q)
+
+  ## queries are split into dictionary_terms and advanced_queries, because dictionary_terms
+  ## are less expensive. Both do use the same algorithm for looking up the individual terms
+  ## so the lookup terms are pooled
+  adv = is_advanced(q)
+
+  ## parse advanced queries
+  if (any(adv)) {
+    queries = lapply(q[adv], parse_advanced_query, feature=feature, optimize_OR=optimize_OR, optimize_seq=optimize_seq)
+    advanced_queries = data.table::data.table(query_index = which(adv), query = lapply(queries, function(x) x$query))
+    query_lookup_terms = data.table::rbindlist(lapply(queries, function(x) x$query_terms), fill = T)
+  } else {
+    advanced_queries = NULL
+    query_lookup_terms = NULL
+  }
+
+  ## parse dictionary queries
+  if (any(!adv)) {
+    dict_lookup_terms = parse_dictionary_term(q[!adv], feature)
+    dictionary_terms = data.table::data.table(query_index = which(!adv), term=dict_lookup_terms$term)
+  } else {
+    dict_lookup_terms = NULL
+    dictionary_terms = NULL
+  }
+  ## merge the terms that need to be looked for
+  lookup_terms = unique(rbind(query_lookup_terms, dict_lookup_terms))
+  data.table::setkeyv(lookup_terms, 'feature')
+
+  list(advanced_queries = advanced_queries, dictionary_terms = dictionary_terms, lookup_terms = lookup_terms)
 }
 
-parse_query <- function(q, feature='', optimize_OR=T, optimize_seq=T) {
+parse_dictionary_term <- function(q, feature='') {
+  case_sensitive = stringi::stri_detect(q, regex='~g$')
+  q = gsub('~g$', '', q)
+  q = gsub('^[<"]|[>"]$', '', q)
+  data.table::data.table(term=q, feature=feature, case_sensitive=case_sensitive, ghost=FALSE)
+}
+
+
+parse_advanced_query <- function(q, feature='', optimize_OR=T, optimize_seq=T) {
   q = parse_query_cpp(q)
   q = simplify_query(q, feature=feature)
   if (optimize_OR) q = optimize_query(q, collapse_or_queries)
@@ -14,6 +47,21 @@ parse_query <- function(q, feature='', optimize_OR=T, optimize_seq=T) {
   list(query = q,
        query_terms = query_terms(q))
 }
+
+is_advanced <- function(q) {
+  ## a query can be a simple dictionary query or an advanced boolean query.
+  q = gsub('~g$', '', q)   ## only allowed flag
+
+  adv_symbols = '\\b(OR|NOT|AND)\\b|[(){}\\[\\]~]'
+  has_adv_symbol = stringi::stri_detect(q, regex=adv_symbols)
+
+  terms = stringi::stri_split_boundaries(gsub('\\?|\\*', '', q), type='word')
+  multiterm = sapply(terms, length) > 1
+  quoted = stringi::stri_detect(q, regex='^[<"]') & stringi::stri_detect(q, regex='[>"]$')
+
+  has_adv_symbol | (multiterm & !quoted)
+}
+
 
 optimize_query <- function(q, fun) {
   q = fun(q)

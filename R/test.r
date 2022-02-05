@@ -14,8 +14,7 @@ function() {
   context_level = 'doc_id'
   as_ascii = F
   feature = 'token'
-  verbose = F
-  dict_results = get_dict_results(tc, queries, context_level, as_ascii, feature, verbose)
+  dict_results = get_dict_results(tc, queries, context_level, as_ascii, feature)
 
 
   dictionary_lookup(text, c('mark', 'fossil'))

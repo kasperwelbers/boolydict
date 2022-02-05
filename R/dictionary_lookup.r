@@ -1,12 +1,11 @@
 
 
 ## returns a data.table with columns hit_id (for multiword matches), dict_i (index of matched dict_string) and feat_i (index of the text/feature)
-dictionary_lookup <- function(text, dict_string, index=NULL, context=NULL, regex_sep=' ', mode = c('unique_hits','features'), case_sensitive=F, exact=F, ascii=F, use_wildcards=T, verbose=F){
+dictionary_lookup <- function(text, dict_string, index=NULL, context=NULL, regex_sep=' ', mode = c('unique_hits','features'), case_sensitive=F, exact=F, ascii=F, use_wildcards=T){
   ## prepare and validate tokens
   mode = match.arg(mode)
 
   ## create feature index
-  if (verbose) message("Preparing index")
   fi = data.table::data.table(
     feature = if (is.factor(text)) text else fast_factor(text),
     token_id = if(is.null(index)) 1:length(text) else index,
@@ -25,22 +24,22 @@ dictionary_lookup <- function(text, dict_string, index=NULL, context=NULL, regex
     is_split = is_splittable(fi$feature)
     if (any(is_split)){
       fi = flatten_terms(fi, 'feature', 'i')
-      flatten = T ## remember if splitting was necessary. If not, we can skip an expensive step later on
+      flatten = T ## remember if splitting was necessary, to 'undo' it later
     }
   }
 
   ## perform lookup
   if (any(case_sensitive) && !all(case_sensitive)) {
     if (length(case_sensitive) != length(dict_string)) stop('case_sensitive vector needs to be length 1 or length of dictionary')
-    out1 = dictionary_lookup_tokens(fi, dict_string[case_sensitive], dict_i_ids = which(case_sensitive), mode=mode, case_sensitive=T, ascii, regex_sep, use_wildcards, flatten, 1, verbose)
-    out2 = dictionary_lookup_tokens(fi, dict_string[!case_sensitive], dict_i_ids = which(!case_sensitive), mode=mode, case_sensitive=F, ascii, regex_sep, use_wildcards, flatten, max(out1$hit_id)+1, verbose)
+    out1 = dictionary_lookup_tokens(fi, dict_string[case_sensitive], dict_i_ids = which(case_sensitive), mode=mode, case_sensitive=T, ascii, regex_sep, use_wildcards, flatten, 1)
+    out2 = dictionary_lookup_tokens(fi, dict_string[!case_sensitive], dict_i_ids = which(!case_sensitive), mode=mode, case_sensitive=F, ascii, regex_sep, use_wildcards, flatten, max(out1$hit_id)+1)
     out = rbind(out1,out2)
   } else {
-    out = dictionary_lookup_tokens(fi, dict_string, dict_i_ids = 1:length(dict_string), mode=mode, unique(case_sensitive), ascii, regex_sep, use_wildcards, flatten, 1, verbose)
+    out = dictionary_lookup_tokens(fi, dict_string, dict_i_ids = 1:length(dict_string), mode=mode, unique(case_sensitive), ascii, regex_sep, use_wildcards, flatten, 1)
   }
 
   ## in case a single asterisk wildcard was used, the lookup was skipped, and we'll just add everything.
-  ## this is off course super expensive, so should think of better solution
+  ## this is super expensive, so should think of better solution
   is_ast = which(dict_string == '*')
   if (any(is_ast) && use_wildcards) {
     hit_id_offset = max(out$hit_id)+1
@@ -52,11 +51,10 @@ dictionary_lookup <- function(text, dict_string, index=NULL, context=NULL, regex
 }
 
 
-dictionary_lookup_tokens <- function(fi, dict_string, dict_i_ids, mode, case_sensitive, ascii, regex_sep, use_wildcards, flatten, hit_id_offset=1, verbose=F) {
+dictionary_lookup_tokens <- function(fi, dict_string, dict_i_ids, mode, case_sensitive, ascii, regex_sep, use_wildcards, flatten, hit_id_offset=1) {
   levels(fi$feature) = normalize_string(levels(fi$feature), lowercase=!case_sensitive, ascii = ascii)
   #data.table::setkey(fi, 'feature')
 
-  if (verbose) message("Preparing dictionary")
   d = collapse_dict(dict_string, regex_sep, use_wildcards, case_sensitive, ascii, levels(fi$feature))
   if (!'terms' %in% names(d)) return(NULL)
 
@@ -65,9 +63,8 @@ dictionary_lookup_tokens <- function(fi, dict_string, dict_i_ids, mode, case_sen
   initial_i = fi[list(feature=first_terms), on='feature', which=T, nomatch=0]
   initial_i = sort(unique(initial_i))
 
-  if (verbose) message("Coding features")
 
-  out = do_code_dictionary(as.numeric(fi$feature), context = fi$context, token_id = fi$token_id, which = initial_i, dict = d, hit_id_offset=hit_id_offset, verbose=verbose)
+  out = do_code_dictionary(as.numeric(fi$feature), context = fi$context, token_id = fi$token_id, which = initial_i, dict = d, hit_id_offset=hit_id_offset, verbose=F)
   if (is.null(out) || nrow(out) == 0) return(NULL)
   out$dict_i = dict_i_ids[out$dict_i]
 
