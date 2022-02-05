@@ -16,7 +16,17 @@ search_query(
 )
 }
 \arguments{
-\item{queries}{A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.}
+\item{df}{A data.frame (or tibble, data.table, whatever)}
+
+\item{queries}{A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector).}
+
+\item{text}{The column in df with the text to query. Defaults to 'text'. (see details if you want to use multiple columns in a query)}
+
+\item{context}{Optionally, a column in df with context ids. If used, texts across rows are grouped together so that you can perform Boolean queries across rows.
+The primary use case is if texts are tokens/words, such as produced by tidytext, udpipe or spacyr.}
+
+\item{index}{Optionally, a column in df with indices for texts within a context. In particular, if texts are tokens, these are the token positions. This is only
+relevant if not all tokens are used, and we therefore don't know these positions. The indices then need to be provided to correctly match multitoken strings and proximity queries.}
 
 \item{mode}{There are two modes: "hits" and "terms". The "hits" mode prioritizes finding full and unique matches.,
 which is recommended for counting how often a query occurs. However, this also means that some tokens
@@ -25,21 +35,15 @@ finding all tokens/terms.}
 
 \item{keep_longest}{If TRUE, then overlapping in case of overlapping queries strings in unique_hits mode, the query with the most separate terms is kept. For example, in the text "mr. Bob Smith", the query [smith OR "bob smith"] would match "Bob" and "Smith". If keep_longest is FALSE, the match that is used is determined by the order in the query itself. The same query would then match only "Smith".}
 
-\item{as_ascii}{if TRUE, perform search in ascii.}
-
-\item{tc}{a \code{\link{tCorpus}}}
-
-\item{code}{The code given to the tokens that match the query (useful when looking for multiple queries). Can also put code label in query with # (see details)}
-
-\item{feature}{The name of the feature column within which to search.}
-
-\item{context_level}{Select whether the queries should occur within while "documents" or specific "sentences".}
+\item{as_ascii}{if TRUE, perform search in ascii. Can be useful if you know text contains things like accents, and these are either used inconsistently or you simply
+can't be bothered to type them in your queries.}
 }
 \value{
 A data.table with matches, specifying the index of the data (data_index), the index of the query (query_index) and a unique hit_id.
 }
 \description{
-This function is mainly used
+This function matches a vector of queries to a data.frame with a text column. The output is intentionally very bare bones, so that the function can be used as a
+basis for more convenient applications, such as query_subset, query_join and query_aggregate.
 }
 \details{
 Brief summary of the query language
@@ -53,7 +57,7 @@ The following operators and modifiers are supported:
    \item{tokens within a given token distance can be found using quotes plus tilde and a number specifiying the token distance. e.g. "climate chang*"~10}
    \item{Alternatively, angle brackets (<>) can be used instead of quotes, which also enables nesting exact strings in proximity/window search}
    \item{Queries are not case sensitive, but can be made so by adding the ~s flag. e.g. COP~s only finds "COP" in uppercase. The ~s flag can also be used on parentheses or quotes to make all terms within case sensitive, and this can be combined with the token proximity flag. e.g. "Marco Polo"~s10}
-   \item{The ~g (ghost) flag can be used to mark a term (or all terms within parentheses/quotes) as a ghost term. This has two effects. Firstly, features that match the query term will not be in the results. This is usefull if a certain term is important for getting reliable search results, but not conceptually relevant. Secondly, ghost terms can be used multiple times, in different query hits (only relevant in unique_hits mode). For example, in the text "A B C", the query 'A~g AND (B C)' will return both B and C as separate hit, whereas 'A AND (B C)' will return A and B as a single hit.}
+   \item{The ~g (ghost) flag can be used to mark a term (or all terms within parentheses/quotes) as a ghost term (this is primarily usefull if texts are tokens grouped together in a context). This has two effects. Firstly, features that match the query term will not be in the results. This is usefull if a certain term is important for getting reliable search results, but not conceptually relevant. Secondly, ghost terms can be used multiple times, in different query hits (only relevant in unique_hits mode). For example, in the text "A B C", the query 'A~g AND (B C)' will return both B and C as separate hit, whereas 'A AND (B C)' will return A and B as a single hit.}
    \item{A code label can be included at the beginning of a query, followed by a # to start the query (label# query). Note that to search for a hashtag symbol, you need to escape it with \ (double \\ in R character vector)}
    \item{Aside from the feature column (specified with the feature argument) a query can include any column in the token data. To manually select a column, use 'columnname: ' at the start of a query or nested query (i.e. between parentheses or quotes). See examples for clarification.}
    }

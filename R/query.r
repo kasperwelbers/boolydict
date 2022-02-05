@@ -32,8 +32,8 @@ parse_queries <- function(q, feature='', optimize_OR=T, optimize_seq=T) {
 }
 
 parse_dictionary_term <- function(q, feature='') {
-  case_sensitive = stringi::stri_detect(q, regex='~g$')
-  q = gsub('~g$', '', q)
+  case_sensitive = stringi::stri_detect(q, regex='~s$')
+  q = gsub('~s$', '', q)
   q = gsub('^[<"]|[>"]$', '', q)
   data.table::data.table(term=q, feature=feature, case_sensitive=case_sensitive, ghost=FALSE)
 }
@@ -50,7 +50,7 @@ parse_advanced_query <- function(q, feature='', optimize_OR=T, optimize_seq=T) {
 
 is_advanced <- function(q) {
   ## a query can be a simple dictionary query or an advanced boolean query.
-  q = gsub('~g$', '', q)   ## only allowed flag
+  q = gsub('~s$', '', q)   ## only allowed flag
 
   adv_symbols = '\\b(OR|NOT|AND)\\b|[(){}\\[\\]~]'
   has_adv_symbol = stringi::stri_detect(q, regex=adv_symbols)
