@@ -1,7 +1,7 @@
-lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','contexts'), subcontext=NULL, parent_relation='', keep_longest=TRUE, level=1) {
+lucene_like <- function(dict_results, qlist, mode = c('hits','terms','contexts'), subcontext=NULL, parent_relation='', keep_longest=TRUE, level=1) {
   i=NULL; hit_id = NULL; .ghost = NULL; .term_i = NULL; .seq_i = NULL; .group_i = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
-  mode = match.arg(mode) ## 'unique_hit' created complete and unique sets of hits (needed for counting) but doesn't assign all features
-  ## 'features' mode does not make full sets of hits, but returns all features for which the query is true (needed for coding/dictionaries)
+  mode = match.arg(mode) ## 'unique_hit' created complete and unique sets of hits (needed for counting) but doesn't assign all terms
+  ## 'terms' mode does not make full sets of hits, but returns all terms for which the query is true (needed for coding/dictionaries)
   hit_list = vector('list', length(qlist$terms))
 
   nterms = length(qlist$terms)
@@ -12,7 +12,7 @@ lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','
       jhits = lucene_like(dict_results, q, mode=mode, subcontext=subcontext, parent_relation=qlist$relation, keep_longest=keep_longest, level=level+1)
 
       if (nterms == 1) {
-        if (level == 1 && mode == 'unique_hits' & !is.null(jhits)) jhits = remove_duplicate_hit_id(jhits, keep_longest)
+        if (level == 1 && mode == 'hits' & !is.null(jhits)) jhits = remove_duplicate_hit_id(jhits, keep_longest)
         if (level == 1 && mode == 'contexts' & !is.null(jhits)) jhits = unique(subset(jhits, select=c('context_id',subcontext)))
         return(jhits)
       }
@@ -44,8 +44,8 @@ lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','
 
   hits = data.table::rbindlist(hit_list, fill=TRUE)
   if (nrow(hits) == 0) return(NULL)
-  feature_mode = mode == 'features'
-  if (parent_relation %in% c('AND','proximity','sequence')) feature_mode = TRUE ## with these parents, hit_id will be recalculated, and all valid features should be returned
+  feature_mode = mode == 'terms'
+  if (parent_relation %in% c('AND','proximity','sequence')) feature_mode = TRUE ## with these parents, hit_id will be recalculated, and all valid terms should be returned
   if (qlist$relation %in% c('AND')) get_AND_hit(hits, n_unique = nterms, subcontext=subcontext, group_i = '.group_i', replace = '.ghost', feature_mode=feature_mode) ## assign hit_ids to groups of tokens within the same context
   if (qlist$relation %in% c('NOT')) get_NOT_hit(hits, n_unique = nterms, subcontext=subcontext, group_i = '.group_i', replace = '.ghost', feature_mode=T)
   if (qlist$relation == 'proximity') get_proximity_hit(hits, n_unique = nterms, window=qlist$window, subcontext=subcontext, seq_i = '.seq_i', replace='.ghost', feature_mode=feature_mode, directed=qlist$directed) ## assign hit_ids to groups of tokens within the given window
@@ -56,7 +56,7 @@ lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','
   hits = subset(hits, hit_id > 0)
 
   if (nrow(hits) == 0) return(NULL)
-  if (level == 1 && mode == 'unique_hits') hits = remove_duplicate_hit_id(hits, keep_longest)
+  if (level == 1 && mode == 'hits') hits = remove_duplicate_hit_id(hits, keep_longest)
   if (level == 1 && mode == 'contexts') hits = unique(subset(hits, select=c('context_id',subcontext)))
   return(hits)
 }

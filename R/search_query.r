@@ -7,9 +7,12 @@
 #'
 #' @param tc a \code{\link{tCorpus}}
 #' @param queries A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.
-#' @param code The code given to the tokens that match the query (usefull when looking for multiple queries). Can also put code label in query with # (see details)
+#' @param code The code given to the tokens that match the query (useful when looking for multiple queries). Can also put code label in query with # (see details)
 #' @param feature The name of the feature column within which to search.
-#' @param mode There are two modes: "unique_hits" and "features". The "unique_hits" mode prioritizes finding full and unique matches., which is recommended for counting how often a query occurs. However, this also means that some tokens for which the query is satisfied might not assigned a hit_id. The "features" mode, instead, prioritizes finding all tokens, which is recommended for coding coding features (the code_features and search_recode methods always use features mode).
+#' @param mode There are two modes: "hits" and "terms". The "hits" mode prioritizes finding full and unique matches.,
+#'             which is recommended for counting how often a query occurs. However, this also means that some tokens
+#'             for which the query is satisfied might not assigned a hit_id. The "terms" mode, instead, prioritizes
+#'             finding all tokens/terms.
 #' @param context_level Select whether the queries should occur within while "documents" or specific "sentences".
 #' @param keep_longest If TRUE, then overlapping in case of overlapping queries strings in unique_hits mode, the query with the most separate terms is kept. For example, in the text "mr. Bob Smith", the query [smith OR "bob smith"] would match "Bob" and "Smith". If keep_longest is FALSE, the match that is used is determined by the order in the query itself. The same query would then match only "Smith".
 #' @param as_ascii if TRUE, perform search in ascii.
@@ -41,7 +44,7 @@
 #' search_query(text, queries = c("some", "<example text>"))
 #'
 #' # in the results, the query_index tells which query was matched, data_index tells
-#' # the index of the text, and hit_id gives an id for each match (unique within data_index)
+#' # the index of the text, and hit_id gives an id for each match (unique within query_index)
 #'
 #' # we can also specify a context in which text occurs, in which case Boolean operators work across rows. This
 #' # for instance means that we can also query specific tokens.
@@ -110,7 +113,7 @@
 #' ## ghost terms (~g flag)
 #' d = data.frame(text = c('A','B'), group=c(1,1))
 #' search_query(d, context='group', 'A AND B~g')    ## ghost term (~g) has to occur, but is not returned
-#' search_query(text, 'A AND Q~g')    ## no hi
+#' search_query(text, 'A AND Q~g')    ## no hit
 #'
 #' # (can also be used on parentheses/quotes/anglebrackets for all nested terms)
 #'
@@ -128,7 +131,7 @@
 #' search_query(text, 'A AND B~g')
 #'
 #' }
-search_query <- function(df, queries, text='text', context=NULL, index=NULL, mode = c('unique_hits','features'), keep_longest=TRUE, as_ascii=F, verbose=F){
+search_query <- function(df, queries, text='text', context=NULL, index=NULL, mode = c('hits','terms'), keep_longest=TRUE, as_ascii=F, verbose=F){
   query_i = NULL
   mode = match.arg(mode)
   if (!is.data.frame(df)) df = data.table::data.table(text=df)
@@ -161,6 +164,9 @@ search_query <- function(df, queries, text='text', context=NULL, index=NULL, mod
   }
 
   hits$data_indices = NULL
+
+  if (mode == 'hits') hits = unique(hits[, c('data_index','query_index','hit_id')])
+  if (mode == 'terms') hits = unique(hits[,c('data_index','query_index','term')])
   hits
 }
 
@@ -188,4 +194,7 @@ function() {
   test = df[,list(text=list(text)), by='group']
   test$text
 
+  d = corpustools::sotu_texts
+
+  search_query(d, 'war AND peace')
 }
