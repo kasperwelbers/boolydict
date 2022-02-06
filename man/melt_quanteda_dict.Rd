@@ -4,7 +4,7 @@
 \alias{melt_quanteda_dict}
 \title{Convert a quanteda dictionary to a long data.table format}
 \usage{
-melt_quanteda_dict(dict, column = "code", .index = NULL)
+melt_quanteda_dict(dict, column = "label", .index = NULL)
 }
 \arguments{
 \item{dict}{The quanteda dictionary}
@@ -12,7 +12,7 @@ melt_quanteda_dict(dict, column = "code", .index = NULL)
 \item{column}{The name of the column with the label/code. If dictionary contains multiple levels,
 additional columns are added with the suffix _l[i], where [i] is the level.}
 
-\item{.index}{Do not use (used for recursive melting)}
+\item{.index}{Do not use (used internally)}
 }
 \value{
 A data.table

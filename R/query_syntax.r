@@ -6,10 +6,9 @@
 #'
 #' @title Query syntax
 #' @description
-#' Summary of the query language. Please consult vignette for more details.
 #'
 #' The following operators and modifiers are supported:
-#' \itemize{
+#' \itemize{ro
 #'    \item{Boolean operators AND, OR and NOT. As a shorthand, an empty space can be used as an OR statement, so that -this that those- means -this OR that OR those-. NOT statements strictly mean 'AND NOT', so should only be used between terms (this NOT that).}
 #'    \item{Parentheses for queries with multiple Boolean operators. e.g. '(spam AND eggs) NOT (fish AND (chips OR albatros))}
 #'    \item{Wildcards ? and *. The questionmark can be used to match 1 unknown character or no character at all, e.g. "?at" would find "cat", "hat" and "at". The asterisk can be used to match any number of unknown characters. Both the asterisk and questionmark can be used at the start, end and within a term.}
@@ -21,4 +20,9 @@
 #'    \item{The ~g (ghost) flag can be used to mark a term (or all terms within parentheses/quotes) as a ghost term. This has two effects. Firstly, features that match the query term will not be in the results. This is usefull if a certain term is important for getting reliable search results, but not conceptually relevant. Secondly, ghost terms can be used multiple times, in different query hits (only relevant in unique_hits mode). For example, in the text "A B C", the query 'A~g AND (B C)' will return both B and C as separate hit, whereas 'A AND (B C)' will return A and B as a single hit.}
 #'    \item{Aside from the feature column (specified with the feature argument) a query can include any column in the token data. To manually select a column, use 'columnname: ' at the start of a query or nested query (i.e. between parentheses or quotes). See examples for clarification.}
 #'    }
+#'
+#' Queries can be either simple dictionary terms or more advanced (Lucene like) queries. The simple dictionary terms
+#' are much faster, but the advanced queries are more flexible. It is automatically determined whether a query is simple or advanced,
+#' but if speed is an issue you'll want to use simple dictionary terms whenever possible. Simply put, dictionary terms are either single terms (wildcards allowed)
+#' or multitoken strings (without proximity).
 NULL

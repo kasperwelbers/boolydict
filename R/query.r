@@ -31,6 +31,36 @@ parse_queries <- function(q, feature='', optimize_OR=T, optimize_seq=T) {
   list(advanced_queries = advanced_queries, dictionary_terms = dictionary_terms, lookup_terms = lookup_terms)
 }
 
+
+#' Check if string is a simple dictionary term or advanced query
+#'
+#' @param q   a character vector
+#'
+#' @return A logical vector
+#' @export
+#'
+#' @examples
+#'
+#' queries = c('this OR that',    ## boolean, so advanced
+#'             'this that',       ## space means OR, so advanced
+#'             'single',          ## single term, so basic
+#'             '<simple multiword str*>')  ## quoted, so basic
+#'
+#' is_advanced(queries)
+is_advanced <- function(q) {
+  ## a query can be a simple dictionary query or an advanced boolean query.
+  q = gsub('~s$', '', q)   ## only allowed flag
+
+  adv_symbols = '\\b(OR|NOT|AND)\\b|[(){}\\[\\]~]'
+  has_adv_symbol = stringi::stri_detect(q, regex=adv_symbols)
+
+  terms = stringi::stri_split_boundaries(gsub('\\?|\\*', '', q), type='word')
+  multiterm = sapply(terms, length) > 1
+  quoted = stringi::stri_detect(q, regex='^[<"]') & stringi::stri_detect(q, regex='[>"]$')
+
+  has_adv_symbol | (multiterm & !quoted)
+}
+
 parse_dictionary_term <- function(q, feature='') {
   case_sensitive = stringi::stri_detect(q, regex='~s$')
   q = gsub('~s$', '', q)
@@ -48,19 +78,7 @@ parse_advanced_query <- function(q, feature='', optimize_OR=T, optimize_seq=T) {
        query_terms = query_terms(q))
 }
 
-is_advanced <- function(q) {
-  ## a query can be a simple dictionary query or an advanced boolean query.
-  q = gsub('~s$', '', q)   ## only allowed flag
 
-  adv_symbols = '\\b(OR|NOT|AND)\\b|[(){}\\[\\]~]'
-  has_adv_symbol = stringi::stri_detect(q, regex=adv_symbols)
-
-  terms = stringi::stri_split_boundaries(gsub('\\?|\\*', '', q), type='word')
-  multiterm = sapply(terms, length) > 1
-  quoted = stringi::stri_detect(q, regex='^[<"]') & stringi::stri_detect(q, regex='[>"]$')
-
-  has_adv_symbol | (multiterm & !quoted)
-}
 
 
 optimize_query <- function(q, fun) {

@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // collapse_terms_cpp
 std::vector<std::string> collapse_terms_cpp(std::vector<std::string>& term, LogicalVector& collapse, std::string sep, std::string sep2);
-RcppExport SEXP _textquery_collapse_terms_cpp(SEXP termSEXP, SEXP collapseSEXP, SEXP sepSEXP, SEXP sep2SEXP) {
+RcppExport SEXP _boolydict_collapse_terms_cpp(SEXP termSEXP, SEXP collapseSEXP, SEXP sepSEXP, SEXP sep2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -26,7 +26,7 @@ END_RCPP
 }
 // uncollapse_terms_cpp
 std::map<std::string,std::vector<std::string>> uncollapse_terms_cpp(std::vector<std::string>& term, std::string sep);
-RcppExport SEXP _textquery_uncollapse_terms_cpp(SEXP termSEXP, SEXP sepSEXP) {
+RcppExport SEXP _boolydict_uncollapse_terms_cpp(SEXP termSEXP, SEXP sepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -38,7 +38,7 @@ END_RCPP
 }
 // do_code_dictionary
 DataFrame do_code_dictionary(NumericVector feature, std::vector<int>& context, std::vector<int>& token_id, NumericVector which, List dict, int hit_id_offset, bool verbose);
-RcppExport SEXP _textquery_do_code_dictionary(SEXP featureSEXP, SEXP contextSEXP, SEXP token_idSEXP, SEXP whichSEXP, SEXP dictSEXP, SEXP hit_id_offsetSEXP, SEXP verboseSEXP) {
+RcppExport SEXP _boolydict_do_code_dictionary(SEXP featureSEXP, SEXP contextSEXP, SEXP token_idSEXP, SEXP whichSEXP, SEXP dictSEXP, SEXP hit_id_offsetSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -55,7 +55,7 @@ END_RCPP
 }
 // fast_factor_cpp
 SEXP fast_factor_cpp(SEXP x, SEXP levs);
-RcppExport SEXP _textquery_fast_factor_cpp(SEXP xSEXP, SEXP levsSEXP) {
+RcppExport SEXP _boolydict_fast_factor_cpp(SEXP xSEXP, SEXP levsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -67,7 +67,7 @@ END_RCPP
 }
 // AND_hit_ids_cpp
 NumericVector AND_hit_ids_cpp(NumericVector con, NumericVector subcon, NumericVector term_i, double n_unique, std::vector<std::string> group_i, LogicalVector replace, bool feature_mode);
-RcppExport SEXP _textquery_AND_hit_ids_cpp(SEXP conSEXP, SEXP subconSEXP, SEXP term_iSEXP, SEXP n_uniqueSEXP, SEXP group_iSEXP, SEXP replaceSEXP, SEXP feature_modeSEXP) {
+RcppExport SEXP _boolydict_AND_hit_ids_cpp(SEXP conSEXP, SEXP subconSEXP, SEXP term_iSEXP, SEXP n_uniqueSEXP, SEXP group_iSEXP, SEXP replaceSEXP, SEXP feature_modeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -84,7 +84,7 @@ END_RCPP
 }
 // proximity_hit_ids_cpp
 NumericVector proximity_hit_ids_cpp(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector term_i, double n_unique, double window, NumericVector seq_i, LogicalVector replace, bool feature_mode, bool directed);
-RcppExport SEXP _textquery_proximity_hit_ids_cpp(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP term_iSEXP, SEXP n_uniqueSEXP, SEXP windowSEXP, SEXP seq_iSEXP, SEXP replaceSEXP, SEXP feature_modeSEXP, SEXP directedSEXP) {
+RcppExport SEXP _boolydict_proximity_hit_ids_cpp(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP term_iSEXP, SEXP n_uniqueSEXP, SEXP windowSEXP, SEXP seq_iSEXP, SEXP replaceSEXP, SEXP feature_modeSEXP, SEXP directedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -104,7 +104,7 @@ END_RCPP
 }
 // sequence_hit_ids_cpp
 NumericVector sequence_hit_ids_cpp(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector term_i, double length);
-RcppExport SEXP _textquery_sequence_hit_ids_cpp(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP term_iSEXP, SEXP lengthSEXP) {
+RcppExport SEXP _boolydict_sequence_hit_ids_cpp(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP term_iSEXP, SEXP lengthSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -119,7 +119,7 @@ END_RCPP
 }
 // ngrams_cpp
 CharacterVector ngrams_cpp(CharacterVector tokens, CharacterVector group, int n, std::string sep, std::string empty);
-RcppExport SEXP _textquery_ngrams_cpp(SEXP tokensSEXP, SEXP groupSEXP, SEXP nSEXP, SEXP sepSEXP, SEXP emptySEXP) {
+RcppExport SEXP _boolydict_ngrams_cpp(SEXP tokensSEXP, SEXP groupSEXP, SEXP nSEXP, SEXP sepSEXP, SEXP emptySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -134,7 +134,7 @@ END_RCPP
 }
 // parse_query_cpp
 List parse_query_cpp(std::string x);
-RcppExport SEXP _textquery_parse_query_cpp(SEXP xSEXP) {
+RcppExport SEXP _boolydict_parse_query_cpp(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -145,19 +145,19 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_textquery_collapse_terms_cpp", (DL_FUNC) &_textquery_collapse_terms_cpp, 4},
-    {"_textquery_uncollapse_terms_cpp", (DL_FUNC) &_textquery_uncollapse_terms_cpp, 2},
-    {"_textquery_do_code_dictionary", (DL_FUNC) &_textquery_do_code_dictionary, 7},
-    {"_textquery_fast_factor_cpp", (DL_FUNC) &_textquery_fast_factor_cpp, 2},
-    {"_textquery_AND_hit_ids_cpp", (DL_FUNC) &_textquery_AND_hit_ids_cpp, 7},
-    {"_textquery_proximity_hit_ids_cpp", (DL_FUNC) &_textquery_proximity_hit_ids_cpp, 10},
-    {"_textquery_sequence_hit_ids_cpp", (DL_FUNC) &_textquery_sequence_hit_ids_cpp, 5},
-    {"_textquery_ngrams_cpp", (DL_FUNC) &_textquery_ngrams_cpp, 5},
-    {"_textquery_parse_query_cpp", (DL_FUNC) &_textquery_parse_query_cpp, 1},
+    {"_boolydict_collapse_terms_cpp", (DL_FUNC) &_boolydict_collapse_terms_cpp, 4},
+    {"_boolydict_uncollapse_terms_cpp", (DL_FUNC) &_boolydict_uncollapse_terms_cpp, 2},
+    {"_boolydict_do_code_dictionary", (DL_FUNC) &_boolydict_do_code_dictionary, 7},
+    {"_boolydict_fast_factor_cpp", (DL_FUNC) &_boolydict_fast_factor_cpp, 2},
+    {"_boolydict_AND_hit_ids_cpp", (DL_FUNC) &_boolydict_AND_hit_ids_cpp, 7},
+    {"_boolydict_proximity_hit_ids_cpp", (DL_FUNC) &_boolydict_proximity_hit_ids_cpp, 10},
+    {"_boolydict_sequence_hit_ids_cpp", (DL_FUNC) &_boolydict_sequence_hit_ids_cpp, 5},
+    {"_boolydict_ngrams_cpp", (DL_FUNC) &_boolydict_ngrams_cpp, 5},
+    {"_boolydict_parse_query_cpp", (DL_FUNC) &_boolydict_parse_query_cpp, 1},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_textquery(DllInfo *dll) {
+RcppExport void R_init_boolydict(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

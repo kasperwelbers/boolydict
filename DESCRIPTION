@@ -1,11 +1,12 @@
-Package: textquery
+Package: boolydict
 Type: Package
-Title: Perform Lucene-like Boolean queries 
+Title: Dictionary search with advanced Boolean operators
 Version: 0.1.0
 Author: Kasper Welbers
 Maintainer: Kasper Welbers <kasperwelbers@gmail.com>
-Description: Perform Lucene-like queries, supporting the main Boolean operators
-    AND, OR and NOT, proximity search, multiword strings, and more. 
+Description: Perform dictionary search text analysis with two key benefits.
+    Firstly, it supports Boolean operators like AND, OR, NOT, multiword strings, proximity and more.   
+    Secondly, these operators can be applied on both full texts and tokenized texts.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

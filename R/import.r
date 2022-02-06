@@ -2,5 +2,5 @@
 
 #' @import data.table
 #' @importFrom Rcpp evalCpp
-#' @useDynLib textquery
+#' @useDynLib boolydict
 NULL

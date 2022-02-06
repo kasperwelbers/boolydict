@@ -2,38 +2,38 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 collapse_terms_cpp <- function(term, collapse, sep = " ", sep2 = " ") {
-    .Call('_textquery_collapse_terms_cpp', PACKAGE = 'textquery', term, collapse, sep, sep2)
+    .Call('_boolydict_collapse_terms_cpp', PACKAGE = 'boolydict', term, collapse, sep, sep2)
 }
 
 uncollapse_terms_cpp <- function(term, sep = " ") {
-    .Call('_textquery_uncollapse_terms_cpp', PACKAGE = 'textquery', term, sep)
+    .Call('_boolydict_uncollapse_terms_cpp', PACKAGE = 'boolydict', term, sep)
 }
 
 do_code_dictionary <- function(feature, context, token_id, which, dict, hit_id_offset, verbose) {
-    .Call('_textquery_do_code_dictionary', PACKAGE = 'textquery', feature, context, token_id, which, dict, hit_id_offset, verbose)
+    .Call('_boolydict_do_code_dictionary', PACKAGE = 'boolydict', feature, context, token_id, which, dict, hit_id_offset, verbose)
 }
 
 fast_factor_cpp <- function(x, levs) {
-    .Call('_textquery_fast_factor_cpp', PACKAGE = 'textquery', x, levs)
+    .Call('_boolydict_fast_factor_cpp', PACKAGE = 'boolydict', x, levs)
 }
 
 AND_hit_ids_cpp <- function(con, subcon, term_i, n_unique, group_i, replace, feature_mode) {
-    .Call('_textquery_AND_hit_ids_cpp', PACKAGE = 'textquery', con, subcon, term_i, n_unique, group_i, replace, feature_mode)
+    .Call('_boolydict_AND_hit_ids_cpp', PACKAGE = 'boolydict', con, subcon, term_i, n_unique, group_i, replace, feature_mode)
 }
 
 proximity_hit_ids_cpp <- function(con, subcon, pos, term_i, n_unique, window, seq_i, replace, feature_mode, directed) {
-    .Call('_textquery_proximity_hit_ids_cpp', PACKAGE = 'textquery', con, subcon, pos, term_i, n_unique, window, seq_i, replace, feature_mode, directed)
+    .Call('_boolydict_proximity_hit_ids_cpp', PACKAGE = 'boolydict', con, subcon, pos, term_i, n_unique, window, seq_i, replace, feature_mode, directed)
 }
 
 sequence_hit_ids_cpp <- function(con, subcon, pos, term_i, length) {
-    .Call('_textquery_sequence_hit_ids_cpp', PACKAGE = 'textquery', con, subcon, pos, term_i, length)
+    .Call('_boolydict_sequence_hit_ids_cpp', PACKAGE = 'boolydict', con, subcon, pos, term_i, length)
 }
 
 ngrams_cpp <- function(tokens, group, n, sep, empty) {
-    .Call('_textquery_ngrams_cpp', PACKAGE = 'textquery', tokens, group, n, sep, empty)
+    .Call('_boolydict_ngrams_cpp', PACKAGE = 'boolydict', tokens, group, n, sep, empty)
 }
 
 parse_query_cpp <- function(x) {
-    .Call('_textquery_parse_query_cpp', PACKAGE = 'textquery', x)
+    .Call('_boolydict_parse_query_cpp', PACKAGE = 'boolydict', x)
 }
 
