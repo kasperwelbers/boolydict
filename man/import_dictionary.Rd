@@ -11,7 +11,7 @@ import_dictionary(
 )
 }
 \arguments{
-\item{dict}{A data.frame where each row is a dictionary term, or a quanteda dictionary2 class object.}
+\item{dict}{A data.frame where each row is a dictionary term or a quanteda dictionary2 class object.}
 
 \item{auto_quote}{If TRUE (default), ensures multitoken terms are quoted}
 

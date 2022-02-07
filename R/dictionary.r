@@ -10,7 +10,7 @@
 #' It can take either a quanteda dictionary2 class, or any data.frame type dictionary where each row
 #' holds a dictionary term.
 #'
-#' @param dict            A data.frame where each row is a dictionary term, or a quanteda dictionary2 class object.
+#' @param dict            A data.frame where each row is a dictionary term or a quanteda dictionary2 class object.
 #' @param auto_quote      If TRUE (default), ensures multitoken terms are quoted
 #' @param string_alias    If dict is a data.frame and doesn't have a column called "string", check these aliases
 #'                        to rename a column to "string". (If your dict doesn't have a column with any of these column names, just specify the name here)

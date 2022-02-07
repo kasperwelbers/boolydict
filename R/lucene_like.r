@@ -1,7 +1,6 @@
 lucene_like <- function(dict_results, qlist, mode = c('hits','terms','contexts'), subcontext=NULL, parent_relation='', keep_longest=TRUE, level=1) {
   i=NULL; hit_id = NULL; .ghost = NULL; .term_i = NULL; .seq_i = NULL; .group_i = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
-  mode = match.arg(mode) ## 'unique_hit' created complete and unique sets of hits (needed for counting) but doesn't assign all terms
-  ## 'terms' mode does not make full sets of hits, but returns all terms for which the query is true (needed for coding/dictionaries)
+  mode = match.arg(mode)
   hit_list = vector('list', length(qlist$terms))
 
   nterms = length(qlist$terms)
@@ -13,7 +12,7 @@ lucene_like <- function(dict_results, qlist, mode = c('hits','terms','contexts')
 
       if (nterms == 1) {
         if (level == 1 && mode == 'hits' & !is.null(jhits)) jhits = remove_duplicate_hit_id(jhits, keep_longest)
-        if (level == 1 && mode == 'contexts' & !is.null(jhits)) jhits = unique(subset(jhits, select=c('context_id',subcontext)))
+        if (level == 1 && mode == 'contexts' & !is.null(jhits)) jhits = unique(jhits, by=c('context_id',subcontext))
         return(jhits)
       }
       if (qlist$relation == 'proximity' && q$relation %in% c('proximity','AND')) stop("Cannot nest proximity or AND search within a proximity search")
@@ -57,7 +56,7 @@ lucene_like <- function(dict_results, qlist, mode = c('hits','terms','contexts')
 
   if (nrow(hits) == 0) return(NULL)
   if (level == 1 && mode == 'hits') hits = remove_duplicate_hit_id(hits, keep_longest)
-  if (level == 1 && mode == 'contexts') hits = unique(subset(hits, select=c('context_id',subcontext)))
+  if (level == 1 && mode == 'contexts') hits = unique(hits, by=c('context_id',subcontext))
   return(hits)
 }
 
