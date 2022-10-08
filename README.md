@@ -18,28 +18,30 @@ remotes::install_github('boolydict')
 ## Examples
 
 The center pieces of the package is three functions: dict_match, dict_add and dict_filter.
-They all work mostly the same. The first argument is a data.frame that has a text column,
-which should be indicated with the text_col argument (default is "text"). The second
-argument is a dictionary, which is a data.frame with a "string" column, that contains
-the dictionary term or boolean query, and any other columns that you might want to use. 
+They all work mostly the same. 
+
+* The first argument is a data.frame that has a text column,
+which should be indicated with the text_col argument (default is "text"). 
+* The second argument is the dictionary. This can simply be a character vector of dictionary
+terms or Lucene-like Boolean queries, but it can also be a data.frame with a string column. 
+Using a data.frame with **dict_add** allows you to add information from the other columns.
+For example, adding labels or sentiment scores.
+
+The package should work with any type of data.frame (and actually relies heavily on data.table behind the scenes). 
+In the following examples we just use tidyverse because we're cool like that.
 
 ### dict_filter
 
 You can use dict_filter to filter a data.frame based on a query (or vector of queries).
 
+
 ``` r
 library(boolydict)
+library(tidyverse)
 
-dict = data.frame(string = 'war AND peace')
-war_and_peace = dict_filter(sotu_texts, dict)
-table(war_and_peace$president)
-```
-
-For convenience, in dict_filter the dict can also just be a character vector.
-
-``` r
-war_and_peace = dict_filter(sotu_texts, 'war AND peace')
-table(war_and_peace$president)
+sotu_texts %>%
+   dict_filter('war AND peace') %>%
+   select(id, president)
 ```
 
 For matching the dictionary to tokens, you need to provide the context_col argument
@@ -47,38 +49,79 @@ to specify a unique context_id. The following data is a tokens data.frame produc
 coreNLP pipeline. Each row is a token, and here we want to filter within sentences.
 
 ``` r
-dict_filter(corenlp_tokens, '<according to>', text_col='token', context_col='sentence')
+corenlp_tokens %>%
+   dict_filter('<according to>', text_col='token', context_col='sentence') %>%
+   select(sentence, token)
 ```
 
 By default dict_filter returns the full context if one of the rows is matched. You can
 also just retrieve the specific rows.
 
 ``` r
-dict_filter(corenlp_tokens, '<according to>', text_col='token', context_col='sentence',
-            keep_context=F)
+corenlp_tokens %>%
+   dict_filter('<according to>', text_col='token', context_col='sentence', keep_context=F) %>%
+   select(sentence, token)
 ```
 
 
 ### dict_add
 
-use dict_add to apply a dictionary and add matches to input data frame. Since each row in the data
-can have multiple dictionary matches, the columns in the dictionary need to be summarized/aggregated into scalars (i.e. single values). 
-This is done with name-value pairs, where the name is the name of the column
-that will be added, and the value is an expression to extract the scalar from the
-matched rows in the dictionary. 
+Use dict_add to apply a dictionary and add matches to the input data frame. 
+Note that every row in the input data frame can potentially match multiple terms from the dictionary.
+Therefore, the dictionary matches needs to be summarized/aggregated into scalars (i.e. single values),
+or spread over multiple columns. 
+This is best explained with an example.
+
+We'll first use the query_from_string function as a convenient way to specify some queries.
+Note that spaces without Boolean operators are interpreted as OR conditions and the ~s flag means case sensitive. 
 
 ``` r
-person_dict = data.frame(string= c('john AND mary','mary AND pete', '<according to>'),
-                         label = c('JOHN AND MARY','MARY AND PETE', 'ACCORDING TO'))
-
-tokens = dict_add(corenlp_tokens, person_dict, label=label[1], 
-                                  text_col='token', context_col='sentence')
-tokens[,c('id','token','label')]
+dict = dict_from_string('
+  The Netherlands = netherlands NL~s
+  United States = "united states" (US USA)~s
+')
 ```
 
-You can also use by_label to perform the summary for each value of a categorical variable.
-Here we use a dictionary that has the columns AffectDimension and score. We want to sum
-the score for each AffectDimension label.
+Now say we have some texts that can mention multiple countries
+
+``` r
+df = data.frame(text = c("The Netherlands is smaller than the US",
+                         "Or should we say \"The Netherlands are\"?",
+                         "Is/are the United States?"))
+```
+
+If we now run dict_add without arguments, it tells us how many matches there are.
+
+``` r
+df %>%
+  dict_add(dict)
+```
+
+This shows that we can't just add the dictionary label to **df**, because there would be
+multiple labels for the first text. Instead, we should summarize data from the dictionary.
+We use a syntax similar to the summarize function in dplyr, or the aggregate syntax in data.table. 
+Simply pass name-value pairs, where the name becomes the column name, and the value should be an expression
+that returns a single value (or a list, if you're ok with nested data)
+
+``` r
+df %>%
+  dict_add(dict, n=length(label), first_label=label[1], label_list=list(label))
+```
+
+Note that 'hits' is now gone, because it's only included if no custom summaries are specified.
+But we can add it ourselves, as we did here with 'n'.
+
+Alternatively, we could also cast the multiple matches as columns.
+The summaries are then shown per label.
+If no summary statistics are given, the number of matches (hits) will be shown.
+Furthermore, fill can be used to replace NA values.
+
+``` r
+df %>%
+  dict_add(dict, by_label="label", fill=0)
+```
+
+Here's another example for aggregating dictionary scores.
 
 ``` r
 library(textdata)
@@ -89,10 +132,24 @@ d = dict_add(sotu_texts, dict, score=sum(score), by_label='AffectDimension', fil
 head(d[, c('president','anger','fear','joy','sadness')])
 ```
 
-There are other ways of filtering and joining that we have not (yet) implemented.
-We exposed the bare-bones function for retrieving the matches if you need more flexibility.
+Finally, if you include multiple aggregating scores, the scores and labels are concatenated
+to create the column names. (note that we dropped fill because you might then want to
+manually fix NAs for more flexibility. Though in this specific case it would be fine to set them to 0) 
+
+``` r
+d = dict_add(sotu_texts, dict, n=length(score), score=sum(score), by_label='AffectDimension')
+head(d[, c('president','n.anger','score.anger')])
+```
+
+
+
+### dict_match
+
+There are off course many other useful ways of filtering and joining that we have not (yet) implemented.
+We therefore also expose a bare-bones function for retrieving the matches if you need more flexibility.
 
 ``` r
 matches = dict_match(sotu_texts, dict)
 matches
 ```
+

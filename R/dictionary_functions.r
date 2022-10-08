@@ -25,6 +25,9 @@
 #'                    can't be bothered to type them in your queries.
 #' @param use_wildcards Set to FALSE if you want to disable wildcards. For instance useful if you have a huge dictionary without wildcards that might have ? or * in emoticons and stuff.
 #'                      Note that you can also always escape wildcards with a double backslash (\\? or \\*)
+#' @param cache       Cache the search index to speed up subsequent searches. if cache is a filename or path, the cache will be stored
+#'                    on disk. If cache is a number, the cache will be stored in memory, and the number will indicate the maximum nr of Mb to keep in cache.
+#'                    If NULL, no cache will be kept.
 #'
 #' @return dict_match: A data.table with matches, specifying the index of the df (data_index) and the index of the dict (dict_index). If mode = 'hits', a hit_id column indicates
 #'         which matches of the same dict_index are part of the same hit. If mode = 'terms', a 'term' column shows which terms were matched.
@@ -42,13 +45,13 @@
 #'    text = c('This','is','just','a','simple','example', 'Simple', 'is','good'),
 #'    doc_id = c(1,1,1,1,1,1,2,2,2))
 #' dict_match(tokens, dict, context_col='doc_id')
-dict_match <- function(df, dict, text_col='text', context_col=NULL, index_col=NULL, mode=c('hits','terms'), keep_longest=TRUE, as_ascii=FALSE, use_wildcards=TRUE) {
+dict_match <- function(df, dict, text_col='text', context_col=NULL, index_col=NULL, mode=c('hits','terms'), keep_longest=TRUE, as_ascii=FALSE, use_wildcards=TRUE, cache=NULL) {
   if (!is.data.frame(dict)) dict = data.table::data.table(string=dict, label=names(dict))
   mode = match.arg(mode)
 
   matches = search_query(df, dict$string, text_col=text_col,
                context_col=context_col, index_col=index_col,
-               mode = mode, keep_longest=keep_longest, as_ascii=as_ascii, use_wildcards=use_wildcards)
+               mode = mode, keep_longest=keep_longest, as_ascii=as_ascii, use_wildcards=use_wildcards, cache=cache)
   data.table::setnames(matches, 'query_index','dict_index')
   matches
 }
@@ -84,13 +87,13 @@ dict_match <- function(df, dict, text_col='text', context_col=NULL, index_col=NU
 #'
 #' ## but can also return just the matched rows
 #' dict_filter(tokens, dict, context_col='doc_id', keep_context=FALSE)
-dict_filter <- function(df, dict, keep_context=TRUE, text_col='text', context_col=NULL, index_col=NULL, keep_longest=TRUE, as_ascii=FALSE, use_wildcards=TRUE) {
+dict_filter <- function(df, dict, keep_context=TRUE, text_col='text', context_col=NULL, index_col=NULL, keep_longest=TRUE, as_ascii=FALSE, use_wildcards=TRUE, cache=NULL) {
   if (!is.data.frame(dict)) dict = data.table::data.table(string=dict, label=names(dict))
   mode = if (keep_context && !is.null(context_col)) 'contexts' else 'terms'
 
   matches = search_query(df, dict$string, text_col=text_col,
                          context_col=context_col, index_col=index_col,
-                         mode = mode, keep_longest=keep_longest, as_ascii=as_ascii, use_wildcards=use_wildcards)
+                         mode = mode, keep_longest=keep_longest, as_ascii=as_ascii, use_wildcards=use_wildcards, cache=cache)
 
   if (mode == 'contexts') {
     selected_context = unique(matches$context)
@@ -157,7 +160,7 @@ dict_filter <- function(df, dict, keep_context=TRUE, text_col='text', context_co
 #' ## way queries higher in the dict df get priority.
 #' dict_add(tokens, dict, context_col='doc_id', mode='terms',
 #'                label = label[1])
-dict_add <- function(df, dict, ..., by_label=NULL, fill=NULL, text_col='text', context_col=NULL, index_col=NULL, mode=c('hits','terms'), keep_longest=TRUE, as_ascii=FALSE, use_wildcards=TRUE) {
+dict_add <- function(df, dict, ..., by_label=NULL, fill=NULL, text_col='text', context_col=NULL, index_col=NULL, mode=c('hits','terms'), keep_longest=TRUE, as_ascii=FALSE, use_wildcards=TRUE, cache=NULL) {
   if (!is.data.frame(dict)) dict = data.table::data.table(string=dict, label=names(dict))
   mode = match.arg(mode)
   agg_list = substitute(list(...))
@@ -167,7 +170,7 @@ dict_add <- function(df, dict, ..., by_label=NULL, fill=NULL, text_col='text', c
 
   matches = search_query(df, dict$string, text_col=text_col,
                       context_col=context_col, index_col=index_col,
-                      mode = mode, keep_longest=keep_longest, as_ascii=as_ascii, use_wildcards=use_wildcards)
+                      mode = mode, keep_longest=keep_longest, as_ascii=as_ascii, use_wildcards=use_wildcards, cache=cache)
 
   matches = cbind(matches, dict[matches$query_index,])
 

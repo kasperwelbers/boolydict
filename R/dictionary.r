@@ -36,6 +36,45 @@ import_dictionary <- function(dict, auto_quote=T, string_alias = c('query','word
   dict
 }
 
+#' Create a dictionary from a string format
+#'
+#' This is a convenience function for typing queries in R.
+#' See examples below for how to use the function.
+#'
+#' @param txt A string in which each line is a query. If the line contains a
+#'            "=" sign, the left side becomes the label, and the right
+#'            side the query. See examples below.
+#'
+#' @return
+#' @export A query dictionary
+#'
+#' @examples
+#'
+#' dict_from_string('
+#'    Barack Obama = "(barack OR president) obama"
+#'    spices = parsley OR sage OR rosemary OR thyme
+#' ')
+dict_from_string <- function(txt) {
+  lines = stringi::stri_split(txt, fixed='\n')[[1]]
+  lines = stringi::stri_trim(lines)
+  lines = lines[lines != '']
+  queries = stringi::stri_split(lines, regex=' *= *')
+
+  dfs = lapply(1:length(queries), function(i) {
+    x = queries[[i]]
+    if (length(x) == 2) {
+      label = x[1]
+      query = x[2]
+    } else {
+      label = paste0('Q',i)
+      query = x[1]
+    }
+    data.frame(label=label, string=query)
+  })
+  as.data.frame(data.table::rbindlist(dfs))
+}
+
+
 as_multitoken_string <- function(string) {
   terms = stringi::stri_split_boundaries(gsub('\\?|\\*', '', string), type='word')
   multiterm = sapply(terms, length) > 1

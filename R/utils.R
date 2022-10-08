@@ -10,6 +10,7 @@ fast_factor <- function(x, levels=NULL) {
   if (!is.factor(x)) {
     if (!all(is.na(x))) {
       if (is.null(levels)) levels = vector('character', 0)
+
       x = fast_factor_cpp(as.character(x), as.character(levels))
     } else {
       x = fast_dummy_factor(x)

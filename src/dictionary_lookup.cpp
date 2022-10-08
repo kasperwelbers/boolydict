@@ -19,13 +19,20 @@ int terms_i_binsearch(std::vector<double> n, const double& value) {
   return(-1);
 }
 
-void add_code(std::vector<int>& dict_i, std::vector<int>& hit_id, std::vector<int>& feat_i, std::vector<int>& nterms, int& hit_id_counter, int i, int count_terms, int code_i) {
+void add_code(std::vector<int>& dict_i,
+              std::vector<int>& hit_id,
+              std::vector<int>& feat_i,
+              std::vector<int>& nterms,
+              int& hit_id_counter,
+              int i,
+              int count_terms,
+              int code_i) {
   for (int pos_i = 0; pos_i < count_terms; pos_i++) {
     dict_i.push_back(code_i);
     hit_id.push_back(hit_id_counter);
     feat_i.push_back(i+pos_i+1);
     nterms.push_back(count_terms);
-    
+
     if (dict_i.size() == dict_i.capacity()) {
       dict_i.reserve(dict_i.size()*2);
       hit_id.reserve(hit_id.size()*2);
@@ -36,17 +43,26 @@ void add_code(std::vector<int>& dict_i, std::vector<int>& hit_id, std::vector<in
   hit_id_counter++;
 }
 
-void match_dictionary(std::vector<int>& dict_i, std::vector<int>& hit_id, std::vector<int>& feat_i, std::vector<int>& nterms, int& hit_id_counter, NumericVector& f, std::vector<int>& context, std::vector<int>& token_id, int i, List dict) {
+void match_dictionary(std::vector<int>& dict_i,
+                      std::vector<int>& hit_id,
+                      std::vector<int>& feat_i,
+                      std::vector<int>& nterms,
+                      int& hit_id_counter,
+                      NumericVector& f,
+                      std::vector<int>& context,
+                      std::vector<int>& token_id,
+                      int i,
+                      List dict) {
   double feat;
   int li;
   int count_terms = 0;
 
-  for (int j=0; j < 100; j++) {   // 100 is max nr of words in dict term, which I think is fair
+  for (int j=0; j < 100; j++) {   // 100 is max nr of words in single dict term, which I think is fair
     if (dict.containsElementNamed("code")) {
       // the dictionary is a tree of terms. When the level of a dict contains 'code' it means on term (which can be multiple words) is finished.
       // (but we continue, because if there are also 'terms' at this level, it means there is another longer term)
       NumericVector code = as<NumericVector>(dict["code"]);
-      for(NumericVector::iterator code_i = code.begin(); code_i != code.end(); ++code_i) 
+      for(NumericVector::iterator code_i = code.begin(); code_i != code.end(); ++code_i)
         add_code(dict_i, hit_id, feat_i, nterms, hit_id_counter, i, count_terms, *code_i);
     }
 
@@ -73,7 +89,13 @@ void match_dictionary(std::vector<int>& dict_i, std::vector<int>& hit_id, std::v
 }
 
 // [[Rcpp::export]]
-DataFrame do_code_dictionary(NumericVector feature, std::vector<int>& context, std::vector<int>& token_id, NumericVector which, List dict, int hit_id_offset, bool verbose) {
+DataFrame do_code_dictionary(NumericVector feature,
+                             std::vector<int>& context,
+                             std::vector<int>& token_id,
+                             NumericVector which,
+                             List dict,
+                             int hit_id_offset,
+                             bool verbose) {
   // note that feature is a numeric vector with factor levels.
   std::vector<int> dict_i;
   std::vector<int> hit_id;
@@ -84,7 +106,7 @@ DataFrame do_code_dictionary(NumericVector feature, std::vector<int>& context, s
   hit_id.reserve(startsize);
   feat_i.reserve(startsize);
   nterms.reserve(startsize);
-  
+
   Progress p(which.size(), verbose);
 
   int hit_id_counter = hit_id_offset;

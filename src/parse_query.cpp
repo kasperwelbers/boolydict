@@ -38,7 +38,7 @@ void rstrip(std::string &x){
 
 List get_flag_query(std::string flag) {
   std::map<std::string, std::vector<std::string> > out;
-  
+
   bool tokenexpr = false;
   bool metaexpr = false;
   std::string txt = "";
@@ -71,7 +71,7 @@ List get_flag_query(std::string flag) {
       txt = "";
       continue;
     }
-    
+
     if (tokenexpr) txt.push_back(x);
     if (metaexpr) txt.push_back(x);
   }
@@ -165,7 +165,7 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
   bool all_ghost = false;  // ghost terms  are taken into account in the query (e.g., x and y~i) but are not returned in the results
   List all_flag_query;
   std::string meta_expr = "";
-  
+
   std::string relation = "";
   std::string feature = "";
 
@@ -186,7 +186,7 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
       }
       lag_space = true;
     } else lag_space = false;
-    
+
     // escape next char
     if (x == '\\') {
       x = q.pop();
@@ -199,7 +199,7 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
       }
       continue;
     }
-    
+
     // add verbatim term
     if (x == '{') {
       x = q.pop();
@@ -312,6 +312,7 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
 
 /*** R
 x = parse_query_cpp('(this~{test}[that])~[ok]')
+
 #x
 #parse_query('(this~{test}[that])~[ok]')
 #tc$tokens[eval(parse(text=x$terms[[2]]$flag_query)),]

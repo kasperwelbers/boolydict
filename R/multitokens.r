@@ -54,6 +54,7 @@ add_multitoken_label <- function(tc, colloc_id, feature='token', new_feature=spr
 
 standardize_dict_term_spacing <- function(string, wildcards=T) {
   string = gsub('_', ' ', string)
+  string = stringi::stri_trim(string)
   string = sapply(split_tokens(string, Inf, T), paste, collapse=' ')
   if (wildcards) string = gsub(' ?([?*]) ?', '\\1', string)
   string = gsub(' +', ' ', string)
@@ -66,7 +67,7 @@ flatten_terms <- function(d, feature_col, position_col, sep=' |_'){
 
   fc = flatten_terms_table(d[[feature_col]], d[[position_col]], sep = sep)
 
-  new_levels = setdiff(unique(fc$feature), levels(d))
+  new_levels = setdiff(unique(fc$feature), levels(d[[feature_col]]))
   levels(d[[feature_col]]) = c(levels(d[[feature_col]]), new_levels)
 
   replace_row = fc[fc$nr == 1,]
@@ -86,7 +87,7 @@ flatten_terms <- function(d, feature_col, position_col, sep=' |_'){
   d[[position_col]] = int + cumsum(is_inserted)
   d$orig_i = int
 
-  d
+  droplevels(d)
 }
 
 is_splittable <- function(feature) {

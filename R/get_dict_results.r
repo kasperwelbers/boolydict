@@ -2,7 +2,7 @@
 ## prepares data for lucene_like.
 
 #' @import data.table
-get_dict_results <- function(tokens, query_terms, text='text', index=NULL, context=NULL, as_ascii=F, use_wildcards=TRUE) {
+get_dict_results <- function(tokens, query_terms, text='text', index=NULL, context=NULL, as_ascii=F, use_wildcards=TRUE, cache=NULL) {
   hit_id = feat_i = NULL
 
   ## index and context are columns in tokens. turn into vectors here
@@ -18,11 +18,16 @@ get_dict_results <- function(tokens, query_terms, text='text', index=NULL, conte
   for (i in 1:length(features)) {
     if (!features[i] %in% colnames(tokens)) stop(sprintf('The feature "%s" is not a column in tokens', features[i]))
 
-
     dict = query_terms[list(features[i]),,on='feature']
-
-    fi = dictionary_lookup(text = tokens[[features[i]]],  dict_string=dict$term, index = index, context=context,
-                           mode='features', case_sensitive=dict$case_sensitive, ascii=as_ascii, use_wildcards=use_wildcards)
+    fi = dictionary_lookup(text = tokens[[features[i]]],
+                           dict_string=dict$term,
+                           index = index,
+                           context=context,
+                           mode='features',
+                           case_sensitive=dict$case_sensitive,
+                           ascii=as_ascii,
+                           use_wildcards=use_wildcards,
+                           cache=cache)
 
     if (!is.null(fi)) if ('token_expr' %in% colnames(query_terms)) fi = token_expression_filter(tc, fi, query_terms)
 
