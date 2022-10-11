@@ -5,6 +5,7 @@
 \alias{dict_left_join}
 \alias{dict_right_join}
 \alias{dict_full_join}
+\alias{dict_inner_join}
 \title{Join two tables based on a character column of a dictionary or Lucene-like
 Boolean queries}
 \usage{
@@ -15,6 +16,8 @@ dict_left_join(x, y, by, ...)
 dict_right_join(x, y, by, ...)
 
 dict_full_join(x, y, by, ...)
+
+dict_inner_join(x, y, by, ...)
 }
 \arguments{
 \item{x, y}{A pair of data frames, data frame extensions (e.g. a tibble)}

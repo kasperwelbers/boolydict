@@ -42,7 +42,12 @@ dict_join <- function(x, y, by, mode = "left", ...) {
   )[, !"hit_id"]
   data.table::setnames(matches, c("data_index", "query_index"), c(".x", ".y"))
 
-  if (mode == "left") {
+  if (mode == "inner") {
+
+    matches <- merge(x, matches, by = ".x", all.y = TRUE)
+    matches <- merge(matches, y, by = ".y", all.x = TRUE)
+
+  } else if (mode == "left") {
 
     matches <- merge(x, matches, by = ".x", all.x = TRUE)
     matches <- merge(matches, y, by = ".y", all.x = TRUE)
@@ -50,7 +55,7 @@ dict_join <- function(x, y, by, mode = "left", ...) {
   } else if (mode == "right") {
 
     matches <- merge(x, matches, by = ".x", all.y = TRUE)
-    matches <- merge(matches, y, by = ".y", all.x = TRUE)
+    matches <- merge(matches, y, by = ".y", all.y = TRUE)
 
   } else if (mode == "full") {
 
@@ -84,4 +89,10 @@ dict_right_join <- function(x, y, by, ...) {
 #' @export
 dict_full_join <- function(x, y, by, ...) {
   dict_join(x, y, by, mode = "full", ...)
+}
+
+#' @rdname dict_join
+#' @export
+dict_inner_join <- function(x, y, by, ...) {
+  dict_join(x, y, by, mode = "inner", ...)
 }
