@@ -8,7 +8,7 @@ split_tokens <- function(x, max_tokens, remember_spaces=F) {
   } else {
     x = lapply(x, function(x) x[!stringi::stri_detect(x, regex='^\\s+$')])
   }
-  if (!is.null(max_tokens)) x = sapply(x, head, max_tokens, simplify=F)
+  if (!is.null(max_tokens)) x = sapply(x, utils::head, max_tokens, simplify=F)
   x
 }
 

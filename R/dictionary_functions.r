@@ -62,7 +62,6 @@ dict_match <- function(df, dict, text_col='text', context_col=NULL, index_col=NU
 #' This is a convenience function for using dictionary search to filter a data.frame.
 #'
 #' @param keep_context in dict_filter. If TRUE, then all rows within a context are selected if at least one of the rows matches the dictionary.
-#' @param mode not used in dict_filter
 #' @inheritParams dict_match
 #'
 #' @return The input df in the original class, filtered on the matched rows

@@ -45,8 +45,8 @@ import_dictionary <- function(dict, auto_quote=T, string_alias = c('query','word
 #'            "=" sign, the left side becomes the label, and the right
 #'            side the query. See examples below.
 #'
-#' @return
-#' @export A query dictionary
+#' @return A query dictionary
+#' @export
 #'
 #' @examples
 #'

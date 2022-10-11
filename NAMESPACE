@@ -2,7 +2,12 @@
 
 export(dict_add)
 export(dict_filter)
+export(dict_from_string)
+export(dict_full_join)
+export(dict_join)
+export(dict_left_join)
 export(dict_match)
+export(dict_right_join)
 export(import_dictionary)
 export(is_advanced)
 export(melt_quanteda_dict)

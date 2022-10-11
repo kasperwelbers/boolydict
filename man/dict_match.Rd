@@ -13,7 +13,8 @@ dict_match(
   mode = c("hits", "terms"),
   keep_longest = TRUE,
   as_ascii = FALSE,
-  use_wildcards = TRUE
+  use_wildcards = TRUE,
+  cache = NULL
 )
 }
 \arguments{
@@ -43,6 +44,10 @@ can't be bothered to type them in your queries.}
 
 \item{use_wildcards}{Set to FALSE if you want to disable wildcards. For instance useful if you have a huge dictionary without wildcards that might have ? or * in emoticons and stuff.
 Note that you can also always escape wildcards with a double backslash (\\? or \\*)}
+
+\item{cache}{Cache the search index to speed up subsequent searches. if cache is a filename or path, the cache will be stored
+on disk. If cache is a number, the cache will be stored in memory, and the number will indicate the maximum nr of Mb to keep in cache.
+If NULL, no cache will be kept.}
 }
 \value{
 dict_match: A data.table with matches, specifying the index of the df (data_index) and the index of the dict (dict_index). If mode = 'hits', a hit_id column indicates
