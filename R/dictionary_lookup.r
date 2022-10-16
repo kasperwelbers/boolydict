@@ -1,7 +1,7 @@
 
 
 ## returns a data.table with columns hit_id (for multiword matches), dict_i (index of matched dict_string) and feat_i (index of the text/feature)
-dictionary_lookup <- function(text, dict_string, index=NULL, context=NULL, sep=' ', mode = c('unique_hits','features'), case_sensitive=F, exact=F, ascii=F, use_wildcards=T, cache=NULL){
+dictionary_lookup <- function(text, dict_string, index=NULL, context=NULL, sep=' ', mode = c('unique_hits','features'), case_sensitive=F, use_wildcards=T, cache=NULL){
   ## prepare and validate tokens
   mode = match.arg(mode)
 
@@ -13,20 +13,20 @@ dictionary_lookup <- function(text, dict_string, index=NULL, context=NULL, sep='
   if (!is.null(cache)) {
     cache_storage = get_cache_storage(cache)
     prepare_index_mem = memoise::memoise(prepare_index, cache=cache_storage)
-    fi = prepare_index_mem(text, index, context, exact)
+    fi = prepare_index_mem(text, index, context)
   } else {
-    fi = prepare_index(text, index, context, exact)
+    fi = prepare_index(text, index, context)
   }
-  if (!exact) dict_string = standardize_dict_term_spacing(dict_string, use_wildcards)
+  dict_string = standardize_dict_term_spacing(dict_string, use_wildcards)
 
   ## perform lookup
   if (any(case_sensitive) && !all(case_sensitive)) {
     if (length(case_sensitive) != length(dict_string)) stop('case_sensitive vector needs to be length 1 or length of dictionary')
-    out1 = dictionary_lookup_tokens(fi, dict_string[case_sensitive], dict_i_ids = which(case_sensitive), mode=mode, case_sensitive=T, ascii, use_wildcards,  1)
-    out2 = dictionary_lookup_tokens(fi, dict_string[!case_sensitive], dict_i_ids = which(!case_sensitive), mode=mode, case_sensitive=F, ascii, use_wildcards, max(out1$hit_id)+1)
+    out1 = dictionary_lookup_tokens(fi, dict_string[case_sensitive], dict_i_ids = which(case_sensitive), mode=mode, case_sensitive=T, use_wildcards,  1)
+    out2 = dictionary_lookup_tokens(fi, dict_string[!case_sensitive], dict_i_ids = which(!case_sensitive), mode=mode, case_sensitive=F, use_wildcards, max(out1$hit_id)+1)
     out = rbind(out1,out2)
   } else {
-    out = dictionary_lookup_tokens(fi, dict_string, dict_i_ids = 1:length(dict_string), mode=mode, unique(case_sensitive), ascii, use_wildcards,  1)
+    out = dictionary_lookup_tokens(fi, dict_string, dict_i_ids = 1:length(dict_string), mode=mode, unique(case_sensitive), use_wildcards,  1)
   }
 
   ## in case a single asterisk wildcard was used, the lookup was skipped, and we'll just add everything.
@@ -59,7 +59,7 @@ get_cache_storage <- function(cache) {
   }
 }
 
-prepare_index <- function(text, index, context, exact) {
+prepare_index <- function(text, index, context) {
   fi = data.table::data.table(
     feature = if (is.factor(text)) text else fast_factor(text),
     token_id = if(is.null(index)) 1:length(text) else index,
@@ -68,24 +68,26 @@ prepare_index <- function(text, index, context, exact) {
   )
   data.table::setkeyv(fi, c('context','token_id'))
 
-  if (!exact) {
-    ## this dude here breaks every text into tokens. This has two applications.
-    ## 1. if text is a vector or tokens, it breaks up any conjunctions
-    ## 2. if text is a full text, it breaks it into tokens
-    ## It's optional because the (less flexible) exact match is much faster
-    is_split = is_splittable(fi$feature)
-    if (any(is_split)){
-      fi = flatten_terms(fi, 'feature', 'i')
-    }
+  ## this dude here breaks every text into tokens. This has two applications.
+  ## 1. if text is a vector or tokens, it breaks up any conjunctions
+  ## 2. if text is a full text, it breaks it into tokens
+  ## It's optional because the (less flexible) exact match is much faster
+  is_split = is_splittable(fi$feature)
+  if (any(is_split)){
+    fi = flatten_terms(fi, 'feature', 'i')
+    fi$return_i = fi$orig_i
+  } else {
+    fi$return_i = fi$i
   }
+
   fi
 }
 
-dictionary_lookup_tokens <- function(fi, dict_string, dict_i_ids, mode, case_sensitive, ascii, use_wildcards,  hit_id_offset=1) {
-  levels(fi$feature) = normalize_string(levels(fi$feature), lowercase=!case_sensitive, ascii = ascii)
+dictionary_lookup_tokens <- function(fi, dict_string, dict_i_ids, mode, case_sensitive, use_wildcards,  hit_id_offset=1) {
+  levels(fi$feature) = normalize_string(levels(fi$feature), lowercase=!case_sensitive)
   data.table::setindexv(fi, 'feature')
 
-  d = collapse_dict(dict_string, use_wildcards, case_sensitive, ascii, levels(fi$feature))
+  d = collapse_dict(dict_string, use_wildcards, case_sensitive, levels(fi$feature))
   if (!'terms' %in% names(d)) return(NULL)
 
   first_terms = levels(fi$feature)[d$terms_i]
@@ -114,15 +116,15 @@ dictionary_lookup_tokens <- function(fi, dict_string, dict_i_ids, mode, case_sen
   data.table::data.table(hit_id=out$hit_id, dict_i=out$dict_i, feat_i=out$feat_i, orig_feat_i=out$orig_i)
 }
 
-normalize_string <- function(x, lowercase=T, ascii=T, trim=T){
+normalize_string <- function(x, lowercase=T, ascii=F, trim=T){
   if (lowercase) x = tolower(x)
   if (ascii) x = iconv(x, to='ASCII//TRANSLIT')
   if (trim) x = stringi::stri_trim(stringi::stri_enc_toutf8(x))
   x
 }
 
-collapse_dict <- function(string, use_wildcards, case_sensitive, ascii, feature_levels) {
-  dict = data.table::data.table(string = normalize_string(string, lowercase=!case_sensitive, ascii=ascii))
+collapse_dict <- function(string, use_wildcards, case_sensitive,  feature_levels) {
+  dict = data.table::data.table(string = normalize_string(string, lowercase=!case_sensitive))
 
   ## remove separator if at start or end of word
   dict$string = gsub("^ | $", '', dict$string)

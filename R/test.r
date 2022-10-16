@@ -6,15 +6,16 @@ function() {
            'Hey, A ~ symbol!! Can I match that?')
   tc = corpustools::cre
 
+
+
   query = 'mark AND rutte'
   feature = ''
   queries = parse_queries(query, feature = feature)
 
   tokens = data.frame(token=text, )
   context_level = 'doc_id'
-  as_ascii = F
   feature = 'token'
-  dict_results = get_dict_results(tc, queries, context_level, as_ascii, feature)
+  dict_results = get_dict_results(tc, queries, context_level, feature)
 
 
   dictionary_lookup(text, c('mark', 'fossil'))

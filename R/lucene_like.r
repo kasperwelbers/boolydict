@@ -21,7 +21,6 @@ lucene_like <- function(dict_results, qlist, mode = c('hits','terms','contexts')
         if (qlist$relation %in% c('proximity','sequence','AND')) jhits[, .group_i := paste(j, .group_i, sep='_')] ## for keeping track of nested multi word queries
       }
     } else {
-      #st = Sys.time()
       only_context = mode == 'contexts' && qlist$relation %in% c('AND','NOT')  ## only_context is more efficient, but can only be used for AND and NOT, because proximity and sequence require feature positions (and OR can be nested in them)
 
       jhits = lookup(dict_results, q$term, feature=q$feature, case_sensitive=q$case_sensitive, only_context=only_context)

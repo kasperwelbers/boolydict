@@ -1,12 +1,10 @@
-
-
-search_query <- function(df, queries, text_col='text', context_col=NULL, index_col=NULL, mode = c('hits','terms','contexts'), keep_longest=TRUE, as_ascii=F, use_wildcards=TRUE, cache=NULL){
+search_query <- function(df, queries, text_col='text', context_col=NULL, index_col=NULL, mode = c('hits','terms','contexts'), keep_longest=TRUE, use_wildcards=TRUE, cache=NULL){
   mode = match.arg(mode)
   if (!is.data.frame(df)) df = data.table::data.table(text=df)
   if (!text_col %in% colnames(df)) stop(sprintf('text (%s) is not available', text_col))
   if (mode == 'contexts' && is.null(context_col)) stop('Mode cannot be contexts if no context_col is specified')
 
-  hits = perform_query_search(df, queries, mode, text_col, index_col, context_col, as_ascii, use_wildcards, cache)
+  hits = perform_query_search(df, queries, mode, text_col, index_col, context_col, use_wildcards, cache)
   if (nrow(hits) == 0) return(data.table::data.table(term=character(), query_index=numeric(), hit_id=numeric(), data_index=numeric()))
 
   ## exact multiword strings are collapsed for efficiency. Here we flatten them again to get all the data_indices
@@ -38,14 +36,18 @@ search_query <- function(df, queries, text_col='text', context_col=NULL, index_c
 }
 
 
-perform_query_search <- function(df, queries, mode, text, index, context, as_ascii, use_wildcards, cache) {
+perform_query_search <- function(df, queries, mode, text, index, context,  use_wildcards, cache, test_db=FALSE) {
   hit_id = NULL
   ## first parses the queries, which gives the prepared queries split into dictionary_terms and advanced_queries,
   ## and gives the lookup_terms used in these queries.
   queries = parse_queries(queries, feature = text) ## use text as default feature to query on (but queries can also refer to specific other features)
 
   ## then lookup the terms
-  dict_results = get_dict_results(df, queries$lookup_terms, text, index=index, context=context, as_ascii=as_ascii, use_wildcards=use_wildcards, cache=cache)
+  if (test_db) {
+    dict_results = db_get_dict_results(df, queries$lookup_terms, text, index=index, context=context, use_wildcards=use_wildcards, cache=cache)
+  } else {
+    dict_results = get_dict_results(df, queries$lookup_terms, text, index=index, context=context, use_wildcards=use_wildcards, cache=cache)
+  }
 
   ## process the (less expensive) dictionary_terms
   if (!is.null(queries$dictionary_terms)) {

@@ -2,7 +2,7 @@
 ## prepares data for lucene_like.
 
 #' @import data.table
-get_dict_results <- function(tokens, query_terms, text='text', index=NULL, context=NULL, as_ascii=F, use_wildcards=TRUE, cache=NULL) {
+get_dict_results <- function(tokens, query_terms, text='text', index=NULL, context=NULL, use_wildcards=TRUE, cache=NULL) {
   hit_id = feat_i = NULL
 
   ## index and context are columns in tokens. turn into vectors here
@@ -25,11 +25,8 @@ get_dict_results <- function(tokens, query_terms, text='text', index=NULL, conte
                            context=context,
                            mode='features',
                            case_sensitive=dict$case_sensitive,
-                           ascii=as_ascii,
                            use_wildcards=use_wildcards,
                            cache=cache)
-
-    if (!is.null(fi)) if ('token_expr' %in% colnames(query_terms)) fi = token_expression_filter(tc, fi, query_terms)
 
     if (!is.null(fi)) {
       fi$ghost = dict$ghost[fi$dict_i]
@@ -48,26 +45,3 @@ get_dict_results <- function(tokens, query_terms, text='text', index=NULL, conte
   }
   dict_results
 }
-
-token_expression_filter <- function(tc, fi, query_terms) {
-  rm_fi = rep(F, nrow(fi))
-  for (expr in unique(query_terms$token_expr)) {
-    if (is.na(expr)) next
-    q_has_expr = !is.na(query_terms$token_expr) & query_terms$token_expr == expr
-    fi_has_expr = q_has_expr[fi$dict]                                                                                       ## find which features have the expression as a condition
-    which_expr_false = tryCatch(tc$tokens[fi$feat_i[fi_has_expr]][!eval(parse(text=expr)),,which=T], error = function(e) e) ## evaluate expression for these features in tc$tokens
-
-    ## special error handling, because this can be confusing
-    if (inherits(which_expr_false, 'simpleError'))
-      stop(call. = F, paste('A token subset expression used in a query gave an error:', paste0('The expression\n', expr), paste0('The error\n',which_expr_false$message), sep='\n\n'))
-
-    which_expr_false = tc$tokens[fi$feat_i[fi_has_expr]][!eval(parse(text=expr)),,which=T]                                  ## evaluate expression for these features in tc$tokens
-
-
-    rm_fi[fi_has_expr][which_expr_false] = T                                                     ## take features with expression, and of those set rm_fi features where expression evaluated to false to T (i.e. should be removed)
-  }
-  if (all(rm_fi)) return(NULL)
-  fi[!rm_fi,]
-}
-
-
