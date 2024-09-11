@@ -12,7 +12,7 @@ text columns. The key features are:
 ## Installation
 
 ``` r
-remotes::install_github('boolydict')
+remotes::install_github('kasperwelbers/boolydict')
 ```
 
 ## Examples
