@@ -4,7 +4,7 @@ search_query <- function(df, queries, text_col='text', context_col=NULL, index_c
   if (!text_col %in% colnames(df)) stop(sprintf('text (%s) is not available', text_col))
   if (mode == 'contexts' && is.null(context_col)) stop('Mode cannot be contexts if no context_col is specified')
 
-  hits = perform_query_search(df, queries, mode, text_col, index_col, context_col, use_wildcards, cache)
+  hits = perform_query_search(df, queries, mode, text_col, index_col, context_col, use_wildcards, cache, keep_longest=keep_longest)
   if (nrow(hits) == 0) return(data.table::data.table(term=character(), query_index=numeric(), hit_id=numeric(), data_index=numeric()))
 
   ## exact multiword strings are collapsed for efficiency. Here we flatten them again to get all the data_indices
@@ -36,7 +36,7 @@ search_query <- function(df, queries, text_col='text', context_col=NULL, index_c
 }
 
 
-perform_query_search <- function(df, queries, mode, text, index, context,  use_wildcards, cache, test_db=FALSE) {
+perform_query_search <- function(df, queries, mode, text, index, context,  use_wildcards, cache, test_db=FALSE, keep_longest=TRUE) {
   hit_id = NULL
   ## first parses the queries, which gives the prepared queries split into dictionary_terms and advanced_queries,
   ## and gives the lookup_terms used in these queries.
